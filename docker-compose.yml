@@ -1,0 +1,48 @@
+version: '3.3'
+services:
+  passbolt:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    container_name: passbolt
+    depends_on:
+    - passbolt-db
+    environment:
+    - DB_HOST=passbolt-db
+    - DB_USER=passbolt
+    - DB_PASS=password123
+    - DB_NAME=passbolt
+  
+    - REGISTRATION=true
+    - URL=localhost
+  
+    - EMAIL_TRANSPORT=Smtp
+    - EMAIL_FROM=
+    - EMAIL_HOST=smtp.gmail.com
+    - EMAIL_PORT=587
+    - EMAIL_TIMEOUT=300
+    - EMAIL_USERNAME=
+    - EMAIL_PASSWORD=
+    - EMAIL_TLS=true
+    ports:
+    - "443:443"
+    volumes:
+    - ./log:/var/log/nginx
+    - ./ssl/certificate.crt:/etc/ssl/certs/certificate.crt:ro
+    - ./ssl/certificate.key:/etc/ssl/certs/certificate.key:ro
+    - ./config/core.php:/var/www/passbolt/app/Config/core.php
+    - ./gpg:/var/www/passbolt/app/Config/gpg
+    - ./logrotate_nginx:/etc/logrotate.d/nginx
+    restart: always
+
+  passbolt-db:
+    build:
+      context: .
+      dockerfile: Dockerfile.db
+    container_name: passbolt-db
+    volumes:
+    - ./db:/var/lib/mysql
+    - ./db_log:/var/log/mysql
+    - ./db_conf/mt.cnf:/etc/mysql/conf.d/mt.cnf:ro
+    - ./db_init:/docker-entrypoint-initdb.d:ro
+    restart: always
